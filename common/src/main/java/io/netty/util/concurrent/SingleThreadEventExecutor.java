@@ -285,6 +285,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             if (scheduledTask == null) {
                 return true;
             }
+            //如果定时任务已经或者正处于超时状态，则将其加入到执行taskqueue中
             if (!taskQueue.offer(scheduledTask)) {
                 // No space left in the task queue add it back to the scheduledTaskQueue so we pick it up again.
                 scheduledTaskQueue.add((ScheduledFutureTask<?>) scheduledTask);

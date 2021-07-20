@@ -139,6 +139,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 rejectedExecutionHandler);
         this.provider = ObjectUtil.checkNotNull(selectorProvider, "selectorProvider");
         this.selectStrategy = ObjectUtil.checkNotNull(strategy, "selectStrategy");
+        //通过provider.openSelector();创建并打开多路复用器
         final SelectorTuple selectorTuple = openSelector();
         this.selector = selectorTuple.selector;
         this.unwrappedSelector = selectorTuple.unwrappedSelector;
@@ -350,8 +351,10 @@ public final class NioEventLoop extends SingleThreadEventLoop {
     /**
      * Replaces the current {@link Selector} of this event loop with newly created {@link Selector}s to work
      * around the infamous epoll 100% CPU bug.
+     * 解决epoll 100%的bug
      */
     public void rebuildSelector() {
+        //如果由其他线程发起，为了避免多线程并发操作selector和其他资源，封装为单独的的task
         if (!inEventLoop()) {
             execute(new Runnable() {
                 @Override
@@ -392,7 +395,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 if (!key.isValid() || key.channel().keyFor(newSelectorTuple.unwrappedSelector) != null) {
                     continue;
                 }
-
+                //从旧的selector上去注册，在新的selector上注册，并关闭老的selector
                 int interestOps = key.interestOps();
                 key.cancel();
                 SelectionKey newKey = key.channel().register(newSelectorTuple.unwrappedSelector, interestOps, a);
@@ -490,10 +493,12 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 } else if (strategy > 0) {
                     final long ioStartTime = System.nanoTime();
                     try {
+                        //处理SelectedKeys
                         processSelectedKeys();
                     } finally {
                         // Ensure we always run tasks.
                         final long ioTime = System.nanoTime() - ioStartTime;
+                        //同时处理IO事件和非IO任务
                         ranTasks = runAllTasks(ioTime * (100 - ioRatio) / ioRatio);
                     }
                 } else {
@@ -523,6 +528,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 // Always handle shutdown even if the loop processing threw an exception.
                 try {
                     if (isShuttingDown()) {
+                        //释放资源，并让NioEventLoop退出循环，结束运行
                         closeAll();
                         if (confirmShutdown()) {
                             return;
@@ -672,6 +678,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
     private void processSelectedKey(SelectionKey k, AbstractNioChannel ch) {
         final AbstractNioChannel.NioUnsafe unsafe = ch.unsafe();
+        //如果当前选择键不可用，则close
         if (!k.isValid()) {
             final EventLoop eventLoop;
             try {
@@ -701,6 +708,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 // remove OP_CONNECT as otherwise Selector.select(..) will always return without blocking
                 // See https://github.com/netty/netty/issues/924
                 int ops = k.interestOps();
+                //在unsafe.finishConnect()之前，注销掉SelectionKey.OP_CONNECT
                 ops &= ~SelectionKey.OP_CONNECT;
                 k.interestOps(ops);
 
@@ -715,6 +723,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
             // Also check for readOps of 0 to workaround possible JDK bug which may otherwise lead
             // to a spin loop
+            //读或者链接操作，调用Unsafe的read方法：对于NioServerSocketChannel，读操作就是接受客户端tcp链接，对于NioSocketChannel，读操作就是从SocketChannel中读取ByteBuffer
             if ((readyOps & (SelectionKey.OP_READ | SelectionKey.OP_ACCEPT)) != 0 || readyOps == 0) {
                 unsafe.read();
             }
