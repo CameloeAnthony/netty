@@ -1403,7 +1403,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         @Override
         public void channelActive(ChannelHandlerContext ctx) {
             ctx.fireChannelActive();
-
+            // readIfIsAutoRead，最终调用了channel.read。channel.read方法的实现在AbstractChannel中，调用到了pipeline.read
             readIfIsAutoRead();
         }
 
@@ -1420,7 +1420,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         @Override
         public void channelReadComplete(ChannelHandlerContext ctx) {
             ctx.fireChannelReadComplete();
-
+            // readIfIsAutoRead，最终调用了channel.read。channel.read方法的实现在AbstractChannel中，调用到了pipeline.read
             readIfIsAutoRead();
         }
 

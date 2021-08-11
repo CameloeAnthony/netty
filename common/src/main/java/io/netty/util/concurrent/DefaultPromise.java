@@ -180,6 +180,7 @@ public class DefaultPromise<V> extends AbstractFuture<V> implements Promise<V> {
             addListener0(listener);
         }
 
+        //注册完Listener之后，如果发现promise已经完成了，那么将直接调用nofityListeners方法向EventLoop提交异步任务（此时已经完成绑定EventLoop）
         if (isDone()) {
             notifyListeners();
         }
