@@ -201,25 +201,29 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         synchronized (this) {
             checkMultiplicity(handler);
 
+            //先把handler包装成AbstractChannelHandlerContext
             newCtx = newContext(group, filterName(name, handler), handler);
-
+            //添加到尾部(tail之前，其他handler之后)
             addLast0(newCtx);
 
             // If the registered is false it means that the channel was not registered on an eventLoop yet.
             // In this case we add the context to the pipeline and add a task that will call
             // ChannelHandler.handlerAdded(...) once the channel is registered.
+
+            //如果还未绑定`EventLoop`则稍后再发起对`HandlerAdded`方法的调用。
             if (!registered) {
                 newCtx.setAddPending();
                 callHandlerCallbackLater(newCtx, true);
                 return this;
             }
-
+            //如果已经绑定了EventLoop，并且当前线程非EventLoop线程的话就提交一个异步任务，就发起一个异步任务去调用HandlerAdded方法。
             EventExecutor executor = newCtx.executor();
             if (!executor.inEventLoop()) {
                 callHandlerAddedInEventLoop(newCtx, executor);
                 return this;
             }
         }
+        //如果当前线程是EventLoop线程，就直接调用HandlerAdded方法。
         callHandlerAdded0(newCtx);
         return this;
     }
@@ -453,15 +457,18 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         assert ctx != head && ctx != tail;
 
         synchronized (this) {
+            //从双向链表中删除ChannelHandlerContext
             atomicRemoveFromHandlerList(ctx);
 
             // If the registered is false it means that the channel was not registered on an eventloop yet.
             // In this case we remove the context from the pipeline and add a task that will call
             // ChannelHandler.handlerRemoved(...) once the channel is registered.
             if (!registered) {
+                //如果还未绑定`EventLoop`，则稍后调用`handlerRemoved`方法
                 callHandlerCallbackLater(ctx, false);
                 return ctx;
             }
+            //如果已经绑定了`EventLoop`，但是当前线程非`EventLoop`线程的话，就发起一个异步任务调用callHandlerRemoved0方法
 
             EventExecutor executor = ctx.executor();
             if (!executor.inEventLoop()) {
@@ -474,6 +481,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
                 return ctx;
             }
         }
+        //如果当前线程就是`EventLoop`线程，则直接调用callHandlerRemoved0方法。
         callHandlerRemoved0(ctx);
         return ctx;
     }
@@ -1117,6 +1125,8 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         }
     }
 
+    //handlerAdded方法的调用必须在EventLoop线程内执行，此时就需要调用callHandlerCallbackLater方法
+    // 在pendingHandlerCallbackHead链表中添加一个PendingHandlerAddedTask
     private void callHandlerCallbackLater(AbstractChannelHandlerContext ctx, boolean added) {
         assert !registered;
 

@@ -58,6 +58,7 @@ import static io.netty.channel.ChannelHandlerMask.MASK_USER_EVENT_TRIGGERED;
 import static io.netty.channel.ChannelHandlerMask.MASK_WRITE;
 import static io.netty.channel.ChannelHandlerMask.mask;
 
+//主要封装了DefaultChannelPipeline的调用，具有next和prev指针用于链接AbstractChannelHandlerContext构成双向链表
 abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, ResourceLeakHint {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractChannelHandlerContext.class);
@@ -129,6 +130,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     @Override
     public EventExecutor executor() {
         if (executor == null) {
+            //可以指定EventExecutor，如果没有单独指定的话就使用Channel所绑定的EventLoop
             return channel().eventLoop();
         } else {
             return executor;

@@ -187,6 +187,7 @@ final class ChannelHandlerMask {
     private ChannelHandlerMask() { }
 
     /**
+     * 被skip的方法在执行的过程中会被忽略，跳到下一个ChannelHandler中执行对应的方法
      * Indicates that the annotated event handler method in {@link ChannelHandler} will not be invoked by
      * {@link ChannelPipeline} and so <strong>MUST</strong> only be used when the {@link ChannelHandler}
      * method does nothing except forward to the next {@link ChannelHandler} in the pipeline.
