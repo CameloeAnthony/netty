@@ -825,6 +825,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
         boolean inEventLoop = inEventLoop();
         addTask(task);
         if (!inEventLoop) {
+            //netty会判断reactor线程有没有被启动，如果没有被启动，那就启动线程,调用 SingleThreadEventExecutor.this.run()抽象方法;
             startThread();
             if (isShutdown()) {
                 boolean reject = false;
@@ -843,6 +844,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
             }
         }
 
+        //在外部线程添加任务的时候，会调用wakeup方法来唤醒 selector.select(timeoutMillis)（NioEventLoop实现）
         if (!addTaskWakesUp && immediate) {
             wakeup(inEventLoop);
         }
@@ -973,9 +975,11 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
 
     private void doStartThread() {
         assert thread == null;
+        //每次执行execute 方法的时候都会通过DefaultThreadFactory创建一个FastThreadLocalThread线程，对应netty中的reactor线程实体
         executor.execute(new Runnable() {
             @Override
             public void run() {
+                //netty中的reactor线程实体
                 thread = Thread.currentThread();
                 if (interrupted) {
                     thread.interrupt();

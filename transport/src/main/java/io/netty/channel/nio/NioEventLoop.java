@@ -261,6 +261,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
             logger.trace("failed to instrument a special java.util.Set into: {}", unwrappedSelector, e);
             return new SelectorTuple(unwrappedSelector);
         }
+        //通过反射将selectedKeys与 sun.nio.ch.SelectorImpl 中的两个field绑定，（通过反射将jdk中的两个field替换掉）
         selectedKeys = selectedKeySet;
         logger.trace("instrumented a special java.util.Set into: {}", unwrappedSelector);
         return new SelectorTuple(unwrappedSelector,
@@ -358,7 +359,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
      * 解决epoll 100%的bug
      */
     public void rebuildSelector() {
-        //如果由其他线程发起，为了避免多线程并发操作selector和其他资源，封装为单独的的task
+        //如果由其他线程发起，为了避免多线程并发操作selector和其他资源，封装为单独的的task（netty经典用法）
         if (!inEventLoop()) {
             execute(new Runnable() {
                 @Override
@@ -396,6 +397,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         for (SelectionKey key: oldSelector.keys()) {
             Object a = key.attachment();
             try {
+                //拿到有效key
                 if (!key.isValid() || key.channel().keyFor(newSelectorTuple.unwrappedSelector) != null) {
                     continue;
                 }
@@ -438,8 +440,13 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    //实现SingleThreadEventExecutor中的抽象run方法
+    //处理三件事情：1.首先轮询注册到reactor线程对应的selector上的所有的channel的IO事件
+    //2.处理产生网络IO事件的channel
+    //3.处理任务队列
     @Override
     protected void run() {
+        //selectCnt用于解决空轮训的JDK bug
         int selectCnt = 0;
         for (;;) {
             try {
@@ -460,7 +467,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                         }
                         nextWakeupNanos.set(curDeadlineNanos);
                         try {
-                            if (!hasTasks()) {
+                            if (!hasTasks()) {//无普通任务
                                 strategy = select(curDeadlineNanos);
                             }
                         } finally {
@@ -488,6 +495,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 if (ioRatio == 100) {
                     try {
                         if (strategy > 0) {
+                            //处理SelectedKeys
                             processSelectedKeys();
                         }
                     } finally {
@@ -791,6 +799,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         }
     }
 
+    //在外部线程添加任务的时候，会调用wakeup方法来唤醒 selector.select(timeoutMillis)（NioEventLoop实现）
     @Override
     protected void wakeup(boolean inEventLoop) {
         if (!inEventLoop && nextWakeupNanos.getAndSet(AWAKE) != AWAKE) {
@@ -822,7 +831,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
         if (deadlineNanos == NONE) {
             return selector.select();
         }
-        // Timeout will only be 0 if deadline is within 5 microsecs
+        // timeoutMillis只有在deadlineNanos小于5ms的时候会是0
         long timeoutMillis = deadlineToDelayNanos(deadlineNanos + 995000L) / 1000000L;
         return timeoutMillis <= 0 ? selector.selectNow() : selector.select(timeoutMillis);
     }
