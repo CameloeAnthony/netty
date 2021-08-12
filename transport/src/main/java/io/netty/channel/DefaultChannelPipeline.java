@@ -199,11 +199,12 @@ public class DefaultChannelPipeline implements ChannelPipeline {
     public final ChannelPipeline addLast(EventExecutorGroup group, String name, ChannelHandler handler) {
         final AbstractChannelHandlerContext newCtx;
         synchronized (this) {
+            //检查是否有重复handler:一个Handler如果是@Sharable的，就可以无限次被添加到pipeline中
             checkMultiplicity(handler);
 
-            //先把handler包装成AbstractChannelHandlerContext
+            //group为null，先把handler包装成AbstractChannelHandlerContext
             newCtx = newContext(group, filterName(name, handler), handler);
-            //添加到尾部(tail之前，其他handler之后)
+            //双向链表，添加到尾部(tail之前，其他handler之后)
             addLast0(newCtx);
 
             // If the registered is false it means that the channel was not registered on an eventLoop yet.
@@ -618,6 +619,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
         } catch (Throwable t) {
             boolean removed = false;
             try {
+                //synchronized方法，双向链表节点脱链
                 atomicRemoveFromHandlerList(ctx);
                 ctx.callHandlerRemoved();
                 removed = true;

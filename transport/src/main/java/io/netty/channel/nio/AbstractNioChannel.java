@@ -248,6 +248,7 @@ public abstract class AbstractNioChannel extends AbstractChannel {
                 if (doConnect(remoteAddress, localAddress)) {
                     fulfillConnectPromise(promise, wasActive);
                 } else {
+                    //多数情况下doConnect返回为false
                     connectPromise = promise;
                     requestedRemoteAddress = remoteAddress;
 

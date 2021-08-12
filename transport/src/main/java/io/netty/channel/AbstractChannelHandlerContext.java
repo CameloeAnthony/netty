@@ -58,7 +58,8 @@ import static io.netty.channel.ChannelHandlerMask.MASK_USER_EVENT_TRIGGERED;
 import static io.netty.channel.ChannelHandlerMask.MASK_WRITE;
 import static io.netty.channel.ChannelHandlerMask.mask;
 
-//主要封装了DefaultChannelPipeline的调用，具有next和prev指针用于链接AbstractChannelHandlerContext构成双向链表
+//主要封装了DefaultChannelPipeline的调用（netty为了确保线程的安全性，确保了许多操作在reactor线程中被执行），具有next和prev指针用于链接AbstractChannelHandlerContext构成双向链表
+//ChannelHandlerContext中有用pipeline和channel所有的上下文信息。
 abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, ResourceLeakHint {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(AbstractChannelHandlerContext.class);
@@ -936,6 +937,7 @@ abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, R
     final void callHandlerAdded() throws Exception {
         // We must call setAddComplete before calling handlerAdded. Otherwise if the handlerAdded method generates
         // any pipeline events ctx.handler() will miss them because the state will not allow it.
+        //设置节点状态为ADD_COMPLETE
         if (setAddComplete()) {
             handler().handlerAdded(this);
         }
