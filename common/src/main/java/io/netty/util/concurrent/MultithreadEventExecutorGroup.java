@@ -73,6 +73,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         checkPositive(nThreads, "nThreads");
 
         if (executor == null) {
+            //每次执行execute 方法的时候都会通过DefaultThreadFactory创建一个线程，对应netty中的reactor线程实体
             executor = new ThreadPerTaskExecutor(newDefaultThreadFactory());
         }
 
@@ -81,6 +82,7 @@ public abstract class MultithreadEventExecutorGroup extends AbstractEventExecuto
         for (int i = 0; i < nThreads; i ++) {
             boolean success = false;
             try {
+                //一般是创建NioEventLoop
                 children[i] = newChild(executor, args);
                 success = true;
             } catch (Exception e) {

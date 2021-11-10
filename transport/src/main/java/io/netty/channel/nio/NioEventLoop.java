@@ -114,6 +114,8 @@ public final class NioEventLoop extends SingleThreadEventLoop {
 
     /**
      * The NIO {@link Selector}.
+     * Netty引入了另外两个selector来优化selctor的处理，SelectedSelectionKeySet selectedKeys使用数组实现的set添加和遍历元素效率更高，
+     * 在后面run方法中我们也是操作selectedKeys
      */
     private Selector selector;
     private Selector unwrappedSelector;
@@ -143,7 +145,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 rejectedExecutionHandler);
         this.provider = ObjectUtil.checkNotNull(selectorProvider, "selectorProvider");
         this.selectStrategy = ObjectUtil.checkNotNull(strategy, "selectStrategy");
-        //通过provider.openSelector();创建并打开多路复用器
+        //通过provider.openSelector();创建并打开多路复用器，这里对selector有一个优化
         final SelectorTuple selectorTuple = openSelector();
         this.selector = selectorTuple.selector;
         this.unwrappedSelector = selectorTuple.unwrappedSelector;
@@ -359,7 +361,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
      * 解决epoll 100%的bug
      */
     public void rebuildSelector() {
-        //如果由其他线程发起，为了避免多线程并发操作selector和其他资源，封装为单独的的task（netty经典用法）
+        //如果由其他线程发起，为了避免多线程并发操作selector和其他资源，封装为单独的的task（无锁化串行，netty经典用法）
         if (!inEventLoop()) {
             execute(new Runnable() {
                 @Override
@@ -404,6 +406,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                 //从旧的selector上去注册，在新的selector上注册，并关闭老的selector
                 int interestOps = key.interestOps();
                 key.cancel();
+                //NIO记住：channel  注册到selector上获取selctionKey
                 SelectionKey newKey = key.channel().register(newSelectorTuple.unwrappedSelector, interestOps, a);
                 if (a instanceof AbstractNioChannel) {
                     // Update SelectionKey

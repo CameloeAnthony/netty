@@ -150,6 +150,8 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
 
     /**
      * @see #connect()
+     * 由serverbootstrap.bind 和client bootstrap.connect的时候都会调用，initAndRegister最终调用到SelectableChannel.register方法
+     * 完成创建channel并且注册到selector上
      */
     private ChannelFuture doResolveAndConnect(final SocketAddress remoteAddress, final SocketAddress localAddress) {
         final ChannelFuture regFuture = initAndRegister();
