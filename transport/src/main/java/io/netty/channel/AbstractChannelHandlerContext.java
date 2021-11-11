@@ -60,7 +60,8 @@ import static io.netty.channel.ChannelHandlerMask.mask;
 
 
 /**
- * 主要封装了DefaultChannelPipeline的调用（netty为了确保线程的安全性，确保了许多操作在reactor线程中被执行），具有next和prev指针用于链接AbstractChannelHandlerContext构成双向链表
+ * 主要封装了DefaultChannelPipeline的调用（netty为了确保线程的安全性，确保了许多操作在reactor线程中被执行），
+ * 具有next和prev指针用于链接AbstractChannelHandlerContext构成双向链表
  * ChannelHandlerContext中有用pipeline和channel所有的上下文信息
  */
 abstract class AbstractChannelHandlerContext implements ChannelHandlerContext, ResourceLeakHint {
