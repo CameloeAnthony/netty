@@ -843,9 +843,15 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
                 }
             }
         }
+        //有的EventLoop实现会阻塞在任务队列上，对于这样的EventLoop唤醒方法是向任务队列中添加一个比较特殊的任务，这样的EventLoop中addTaskWakesUp为ture
+
+        //有的EventLoop比如NioEventLoop不会阻塞在任务队列上，但是会阻塞在selector上
+
+        // 对于这样的EventLoop通过调用wakeup方法唤醒，这样的EventLoop中addTaskWakesUp为false
 
         //在外部线程添加任务的时候，会调用wakeup方法来唤醒 selector.select(timeoutMillis)（NioEventLoop实现）
         if (!addTaskWakesUp && immediate) {
+            //通过向队列中添加一个特殊的task来唤醒EventLoop线程
             wakeup(inEventLoop);
         }
     }
@@ -940,6 +946,7 @@ public abstract class SingleThreadEventExecutor extends AbstractScheduledEventEx
     private static final long SCHEDULE_PURGE_INTERVAL = TimeUnit.SECONDS.toNanos(1);
 
     private void startThread() {
+        //AtomicIntegerFieldUpdater 实现原子性
         if (state == ST_NOT_STARTED) {
             if (STATE_UPDATER.compareAndSet(this, ST_NOT_STARTED, ST_STARTED)) {
                 boolean success = false;

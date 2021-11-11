@@ -470,7 +470,7 @@ public final class NioEventLoop extends SingleThreadEventLoop {
                         }
                         nextWakeupNanos.set(curDeadlineNanos);
                         try {
-                            if (!hasTasks()) {//无普通任务
+                            if (!hasTasks()) { //无普通任务
                                 strategy = select(curDeadlineNanos);
                             }
                         } finally {

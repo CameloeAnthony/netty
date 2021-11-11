@@ -145,6 +145,7 @@ final class KQueueEventLoop extends SingleThreadEventLoop {
     @Override
     protected void wakeup(boolean inEventLoop) {
         if (!inEventLoop && WAKEN_UP_UPDATER.compareAndSet(this, 0, 1)) {
+            //通过调用selector.wakeup方法来唤醒EventLoop线程
             wakeup();
         }
     }

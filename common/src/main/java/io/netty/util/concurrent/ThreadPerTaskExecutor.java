@@ -20,7 +20,9 @@ import io.netty.util.internal.ObjectUtil;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
 
-//每次执行execute 方法的时候都会通过DefaultThreadFactory创建一个线程，对应netty中的reactor线程实体
+/**
+ * 每次执行execute 方法的时候都会通过DefaultThreadFactory创建一个线程，对应netty中的reactor线程实体
+ */
 public final class ThreadPerTaskExecutor implements Executor {
     private final ThreadFactory threadFactory;
 
