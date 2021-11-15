@@ -157,6 +157,7 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
         final ChannelFuture regFuture = initAndRegister();
         final Channel channel = regFuture.channel();
 
+        //最终调用到SelectableChannel.register方法成功？
         if (regFuture.isDone()) {
             if (!regFuture.isSuccess()) {
                 return regFuture;

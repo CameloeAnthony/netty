@@ -304,7 +304,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
         }
     }
 
-    //由serverbootstrap.bind 和client bootstrap.connect的时候都会调用
+    //由serverbootstrap.bind 和client bootstrap.connect的时候都会调用，返回的是异步事件
     final ChannelFuture initAndRegister() {
         Channel channel = null;
         try {
