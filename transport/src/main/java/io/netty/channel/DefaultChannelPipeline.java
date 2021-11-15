@@ -1106,6 +1106,7 @@ public class DefaultChannelPipeline implements ChannelPipeline {
 
     private void callHandlerAddedForAllHandlers() {
         final PendingHandlerCallback pendingHandlerCallbackHead;
+        //更新AbstractChannel的 注册状态，同步代码块
         synchronized (this) {
             assert !registered;
 
