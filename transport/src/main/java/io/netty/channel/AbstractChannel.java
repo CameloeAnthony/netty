@@ -64,12 +64,13 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
     /**
      * Creates a new instance.
-     * channel的两个主要属性：unsafe和pipeline
+     * 创建channel：初始化id，unsafe和pipeline
      * @param parent
      *        the parent of this channel. {@code null} if there's no parent.
      */
     protected AbstractChannel(Channel parent) {
         this.parent = parent;
+        //通过机器，进程，时间戳等生成一个id
         id = newId();
         unsafe = newUnsafe();
         pipeline = newChannelPipeline();
@@ -473,7 +474,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
                         new IllegalStateException("incompatible event loop type: " + eventLoop.getClass().getName()));
                 return;
             }
-            //register完成两件事情：绑定eventLoop到channel上去+register0方法
+            //register完成两件事情：绑定eventLoop到channel上去+register0方法（Channel注册到Selector上去+触发事件fireChannelRegistered和fireChannelActive）
             AbstractChannel.this.eventLoop = eventLoop;
 
             if (eventLoop.inEventLoop()) {

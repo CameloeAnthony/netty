@@ -78,6 +78,7 @@ public abstract class SingleThreadEventLoop extends SingleThreadEventExecutor im
 
     @Override
     public ChannelFuture register(Channel channel) {
+        //实际调用unsafe的register方法（register完成两件事情：绑定eventLoop到channel上去+register0方法（Channel注册到Selector上去+触发事件fireChannelRegistered和fireChannelActive））
         return register(new DefaultChannelPromise(channel, this));
     }
 

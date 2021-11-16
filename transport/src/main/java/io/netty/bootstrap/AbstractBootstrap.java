@@ -308,7 +308,7 @@ public abstract class AbstractBootstrap<B extends AbstractBootstrap<B, C>, C ext
     final ChannelFuture initAndRegister() {
         Channel channel = null;
         try {
-            //通过工厂方法创建一个Channel,分别对应NioServerSocketChannel和NioSocketChannel
+            //通过工厂方法创建一个Channel,服务端客户端分别对应NioServerSocketChannel和NioSocketChannel
             channel = channelFactory.newChannel();
             //初始化channel，server端和client端实现不同
             init(channel);

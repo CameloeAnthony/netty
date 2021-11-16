@@ -32,6 +32,7 @@ public final class DefaultEventExecutorChooserFactory implements EventExecutorCh
 
     @Override
     public EventExecutorChooser newChooser(EventExecutor[] executors) {
+        //如果EventLoopGroup内的EventLoop个数是2的幂，则用PowerOfTowEventExecutorChooser，否则用GenericEventExecutorChooser。
         if (isPowerOfTwo(executors.length)) {
             return new PowerOfTwoEventExecutorChooser(executors);
         } else {

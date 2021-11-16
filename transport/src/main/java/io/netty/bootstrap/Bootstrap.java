@@ -157,7 +157,7 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
         final ChannelFuture regFuture = initAndRegister();
         final Channel channel = regFuture.channel();
 
-        //最终调用到SelectableChannel.register方法成功？
+        //阻塞等待：最终调用到SelectableChannel.register方法成功，否则加入异步任务在ChannelFuture的operationComplete中调用
         if (regFuture.isDone()) {
             if (!regFuture.isSuccess()) {
                 return regFuture;
@@ -194,6 +194,7 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
             final EventLoop eventLoop = channel.eventLoop();
             AddressResolver<SocketAddress> resolver;
             try {
+                //地址解析器
                 resolver = this.resolver.getResolver(eventLoop);
             } catch (Throwable cause) {
                 channel.close();
@@ -222,7 +223,7 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
                 return promise;
             }
 
-            // Wait until the name resolution is finished.
+            // 等待地址解析完成，通过future listener
             resolveFuture.addListener(new FutureListener<SocketAddress>() {
                 @Override
                 public void operationComplete(Future<SocketAddress> future) throws Exception {
@@ -250,6 +251,7 @@ public class Bootstrap extends AbstractBootstrap<Bootstrap, Channel> {
             @Override
             public void run() {
                 if (localAddress == null) {
+                    //调用pipeline.connect ，tail.connect
                     channel.connect(remoteAddress, connectPromise);
                 } else {
                     channel.connect(remoteAddress, localAddress, connectPromise);
