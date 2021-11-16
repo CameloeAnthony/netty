@@ -64,7 +64,7 @@ public abstract class AbstractChannel extends DefaultAttributeMap implements Cha
 
     /**
      * Creates a new instance.
-     *
+     * channel的两个主要属性：unsafe和pipeline
      * @param parent
      *        the parent of this channel. {@code null} if there's no parent.
      */
