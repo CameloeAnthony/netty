@@ -986,7 +986,7 @@ public final class PlatformDependent {
 
     /**
      * Create a new {@link Queue} which is safe to use for multiple producers (different threads) and a single
-     * consumer (one thread!).
+     * consumer (one thread!). 多生产者单消费者的queue，来自jctools
      * @return A MPSC queue which may be unbounded.
      */
     public static <T> Queue<T> newMpscQueue() {
